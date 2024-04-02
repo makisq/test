@@ -67,55 +67,58 @@ func fromRoman(roman string) (int, error) {
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter the expression (e.g., 2 + 2 or II + II): ")
-	input, _ := reader.ReadString('\n')
-	input = strings.TrimSpace(input)
 
-	parts := strings.Fields(input)
-	if len(parts) != 3 {
-		fmt.Println("Invalid expression format. Please enter the expression in the format 'a + b'.")
-		os.Exit(1)
-	}
+	for {
+		fmt.Print("Enter the expression (e.g., 2 + 2 or II + II): ")
+		input, _ := reader.ReadString('\n')
+		input = strings.TrimSpace(input)
 
-	num1Str, operator, num2Str := parts[0], parts[1], parts[2]
-	num1, num1err := strconv.Atoi(num1Str)
-	num2, num2err := strconv.Atoi(num2Str)
+		parts := strings.Fields(input)
+		if len(parts) != 3 {
+			fmt.Println("Invalid expression format. Please enter the expression in the format 'a + b'.")
+			continue
+		}
 
-	if num1err != nil || num2err != nil {
-		num1, num1err = fromRoman(num1Str)
-		num2, num2err = fromRoman(num2Str)
+		num1Str, operator, num2Str := parts[0], parts[1], parts[2]
+		num1, num1err := strconv.Atoi(num1Str)
+		num2, num2err := strconv.Atoi(num2Str)
+
 		if num1err != nil || num2err != nil {
-			fmt.Println("Invalid number format. Please enter either arabic or roman numerals.")
-			os.Exit(1)
+			num1, num1err = fromRoman(num1Str)
+			num2, num2err = fromRoman(num2Str)
+			if num1err != nil || num2err != nil {
+				fmt.Println("Invalid number format. Please enter either arabic or roman numerals.")
+				continue
+			}
 		}
-	}
 
-	var result int
-	switch operator {
-	case "+":
-		result = num1 + num2
-	case "-":
-		result = num1 - num2
-	case "*":
-		result = num1 * num2
-	case "/":
-		if num2 == 0 {
-			fmt.Println("Error: Division by zero is not allowed.")
-			os.Exit(1)
+		var result int
+		switch operator {
+		case "+":
+			result = num1 + num2
+		case "-":
+			result = num1 - num2
+		case "*":
+			result = num1 * num2
+		case "/":
+			if num2 == 0 {
+				fmt.Println("Error: Division by zero is not allowed.")
+				continue
+			}
+			result = num1 / num2
+		default:
+			fmt.Println("Invalid operator:", operator)
+			continue
 		}
-		result = num1 / num2
-	default:
-		fmt.Println("Invalid operator:", operator)
-		os.Exit(1)
-	}
 
-	if num1err == nil && num2err == nil {
-		fmt.Println(result)
-	} else {
-		if result <= 0 {
-			fmt.Println("Roman numbers must be positive.")
-			os.Exit(1)
+		if num1err == nil && num2err == nil {
+			fmt.Println(result)
+		} else {
+			if result <= 0 {
+				fmt.Println("Roman numbers must be positive.")
+				continue
+			}
+			fmt.Println(toRoman(result))
 		}
-		fmt.Println(toRoman(result))
 	}
 }
