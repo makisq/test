@@ -65,6 +65,25 @@ func fromRoman(roman string) (int, error) {
 	return result, nil
 }
 
+func isRomanNumeral(input string) bool {
+	for _, r := range input {
+		if _, ok := romanToArabic[r]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
+func isOperator(token string) bool {
+	operators := []string{"+", "-", "*", "/"}
+	for _, op := range operators {
+		if token == op {
+			return true
+		}
+	}
+	return false
+}
+
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 
@@ -75,20 +94,46 @@ func main() {
 
 		parts := strings.Fields(input)
 		if len(parts) != 3 {
-			fmt.Println("Invalid expression format. Please enter the expression in the format 'a + b'.")
-			continue
+			panic("Invalid expression format. Please enter the expression in the format 'a + b'.")
 		}
 
 		num1Str, operator, num2Str := parts[0], parts[1], parts[2]
-		num1, num1err := strconv.Atoi(num1Str)
-		num2, num2err := strconv.Atoi(num2Str)
+		num1IsRoman, num2IsRoman := isRomanNumeral(num1Str), isRomanNumeral(num2Str)
 
-		if num1err != nil || num2err != nil {
-			num1, num1err = fromRoman(num1Str)
-			num2, num2err = fromRoman(num2Str)
-			if num1err != nil || num2err != nil {
-				fmt.Println("Invalid number format. Please enter either arabic or roman numerals.")
-				continue
+		if !isOperator(operator) {
+			panic("Invalid operator: " + operator)
+		}
+
+		if (num1IsRoman && !num2IsRoman) || (!num1IsRoman && num2IsRoman) {
+			panic("Both numbers must be in the same numeral system.")
+		}
+
+		var num1, num2 int
+		var err error
+
+		if num1IsRoman {
+			num1, err = fromRoman(num1Str)
+			if err != nil {
+				panic(err)
+			}
+			num2, err = fromRoman(num2Str)
+			if err != nil {
+				panic(err)
+			}
+			if num1 < 1 || num1 > 10 || num2 < 1 || num2 > 10 {
+				panic("Roman numbers must be in the range from I to X (1 to 10).")
+			}
+		} else {
+			num1, err = strconv.Atoi(num1Str)
+			if err != nil {
+				panic(err)
+			}
+			num2, err = strconv.Atoi(num2Str)
+			if err != nil {
+				panic(err)
+			}
+			if num1 < 1 || num1 > 10 || num2 < 1 || num2 > 10 {
+				panic("Arabic numbers must be in the range from 1 to 10.")
 			}
 		}
 
@@ -97,28 +142,29 @@ func main() {
 		case "+":
 			result = num1 + num2
 		case "-":
+			if num1 < num2 {
+				panic("Roman numbers must be positive.")
+			}
 			result = num1 - num2
 		case "*":
 			result = num1 * num2
 		case "/":
 			if num2 == 0 {
-				fmt.Println("Error: Division by zero is not allowed.")
-				continue
+				panic("Error: Division by zero is not allowed.")
 			}
 			result = num1 / num2
 		default:
-			fmt.Println("Invalid operator:", operator)
-			continue
+			panic("Invalid operator: " + operator)
 		}
 
-		if num1err == nil && num2err == nil {
-			fmt.Println(result)
-		} else {
-			if result <= 0 {
-				fmt.Println("Roman numbers must be positive.")
-				continue
-			}
+		if num1IsRoman && result <= 0 {
+			panic("Roman numbers must be positive.")
+		}
+
+		if num1IsRoman {
 			fmt.Println(toRoman(result))
+		} else {
+			fmt.Println(result)
 		}
 	}
 }
